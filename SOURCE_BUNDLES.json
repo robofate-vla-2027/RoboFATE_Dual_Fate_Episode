@@ -1,0 +1,19 @@
+{
+  "format": "robofate-frozen-source-v1",
+  "selection": "Chat2 production lineage; shared Chat1 teacher core",
+  "runtime_references_verified": 542,
+  "bundles": [
+    {
+      "file": "chat2_production_source.tar.gz",
+      "bytes": 4778700,
+      "sha256": "c98a8a5a0e2552e23e40c56db3382d20f84a19847b382caeeed001cbe6b94d16",
+      "files": 2989
+    },
+    {
+      "file": "chat2_local_orchestration.tar.gz",
+      "bytes": 1276694,
+      "sha256": "c07d176f8d47a1b627d414f842b7cccc2a73cfd27245cc34f4cb645672bb030c",
+      "files": 1852
+    }
+  ]
+}
