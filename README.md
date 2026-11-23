@@ -1,6 +1,6 @@
 # RoboFATE Dual Fate Episode
 
-Private production-lineage source and portable training-data tools.
+Production-lineage source and portable training-data tools.
 
 Dataset: https://www.modelscope.cn/datasets/mxk1998/RoboFATE_Dual_Fate_Episode
 
@@ -88,7 +88,8 @@ launch or resume work. No collection/model/GPU job was launched for publication.
 
 ## Rights And Privacy
 
-This repository and the dataset are private. No new open-source or dataset
+This repository is public. Dataset visibility and access are managed separately.
+No new open-source or dataset
 redistribution license is granted. Retain embedded third-party license notices.
 Supply licensed simulator/assets/weights and separately authorized teacher
 credentials externally; none are included in this repository.
