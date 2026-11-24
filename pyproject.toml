@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "robofate-dual-fate-episode"
+version = "0.7.0"
+description = "RoboFATE source admission, frozen-DM baseline, teacher continuation and campaign data pipeline"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+recording = ["numpy", "Pillow"]
+testing = ["numpy", "Pillow", "gymnasium"]
+
+[project.scripts]
+robofate = "robofate_pipeline.cli:main"
+
+[tool.setuptools]
+py-modules = ["dataset_reader", "export_training", "inventory_episodes"]
+
+[tool.setuptools.packages.find]
+include = ["robofate_pipeline*"]
+
+[tool.setuptools.package-data]
+"robofate_pipeline.native" = ["vulkan/*.cpp", "vulkan/*.hpp", "vulkan/*.json"]

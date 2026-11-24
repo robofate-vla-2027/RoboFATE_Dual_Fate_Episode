@@ -1,95 +1,126 @@
 # RoboFATE Dual Fate Episode
 
-Production-lineage source and portable training-data tools.
+Reusable source for dual-branch robot data collection and prefix/success training
+exports. This project contains **code, public task definitions and synthetic
+tests**, not collected episodes, sample inventories, experiment results or
+machine configurations.
 
-Dataset: https://www.modelscope.cn/datasets/mxk1998/RoboFATE_Dual_Fate_Episode
+## Quick Start
 
-## Dataset Scope
-
-92 positive sources across 15 tasks, from ledger revision 6209:
-21 from Chat1 and 71 from Chat2. The published training view includes only the
-original shared DM prefix and the teacher successful suffix.
-
-Excluded: DM failure suffixes, 67 standalone DM-success negatives, teacher
-replayed prefixes, dense auxiliary RGB, simulator restore snapshots, renderer
-diagnostics, model weights, private teacher executables, and credentials.
-
-Each episode preserves three 640x480 camera streams, native 25 Hz observation
-cadence, 14-dimensional state/action vectors, instruction, actual t1 boundary,
-teacher supervision mask, original requested actions, selected dense execution
-records, provenance, and SHA256 inventories.
-
-The 14D action is `[left_arm(6), left_gripper(1), right_arm(6), right_gripper(1)]`.
-Arm labels are recorded actuator hold targets, not measured observation joint
-positions. Pose requests are projected from recorded IK targets. Gripper
-requests use the native API's `[0,1]` clamp. Native gripper state is the recorded
-normalized previous control, not an independent physical gripper sensor.
-
-## Read And Validate
-
-Python 3.8+ standard library is sufficient for validation and indexing:
+Python 3.11+ is required. Keep environments and generated build files outside
+the release tree.
 
 ```sh
-python -B -m unittest -v test_dataset_reader.py
-python dataset_reader.py EPISODE.tar.gz --sha256 EXPECTED_SHA256
-python dataset_reader.py EPISODE.tar.gz --extract-to ./episode
+python3 -m venv ../robofate-env
+../robofate-env/bin/python -m pip install numpy Pillow gymnasium
+make check PYTHON=../robofate-env/bin/python
 ```
 
-Extraction requires a new destination and checks every member before promotion.
-No path traversal, links, duplicate members, or overwriting are permitted.
-
-```python
-from dataset_reader import load_episode, iter_transitions, action_chunk
-
-episode = load_episode("./episode")
-for sample in iter_transitions("./episode"):
-    # PIL/numpy/torch conversion is a trainer concern.
-    # sample["images"] contains head/left_wrist/right_wrist PNG paths.
-    state, target = sample["state"], sample["action"]
-    assert len(state) == len(target) == 14
-targets, teacher_loss_mask = action_chunk(episode, start=0, horizon=50)
-```
-
-Keep prefix observations as causal context; default supervised transitions are
-teacher-only. `action_chunk` returns shorter terminal chunks rather than
-inventing padded labels. The original DM t1 observation is kept separately;
-the flattened trajectory uses the teacher's fresh observation after restore.
-
-This is real prefix/success imitation data, not the full original dual-branch
-corpus. It is not a drop-in match for the referenced 3,400-source/17-task trainer:
-actual t1 is 10-55, not that trainer's >=175 history contract; only 44 sources
-have matching task names. No missing history, negative branch, or label was
-fabricated. Trainer adaptation is intentionally outside this publication.
-
-## Pipeline Template
-
-Chat2 production lineage is the selected template and shares Chat1's teacher
-and recording core. Its larger observed yield is not a controlled proof of
-better speed or stability: the task sets differ and full-attempt denominators
-are unavailable. All 542 referenced frozen runtime files passed hash checks.
-
-- `chat2_production_source.tar.gz`: 2,989 remote source/config files.
-- `chat2_local_orchestration.tar.gz`: 1,851 local Python/shell source files and
-  the historical checkpoint; includes versioned helper dependencies.
-- `SOURCE_BUNDLES.json`: archive hashes, byte counts and lineage.
-- `unpack_sources.py`: verified, non-executing source extraction.
-- `export_training.py`: selected prefix/success exporter; see `FORMAT.md`.
-- `dataset_reader.py`: portable reader and complete member checksum validator.
-- `SETUP.md`: external dependencies, historical bindings and collection stages.
+To install the CLI without generating build files in the checkout:
 
 ```sh
-python unpack_sources.py --output ./source
+../robofate-env/bin/python -m pip install setuptools wheel
+../robofate-env/bin/python tools/build_wheel.py --output ../wheels
+../robofate-env/bin/python -m pip install ../wheels/robofate_dual_fate_episode-*.whl
 ```
 
-The archives are intentionally frozen to preserve historical source and hash
-pins. They are not a portable one-command simulator deployment. Old host/GPU
-IDs and paused-work checkpoint fields are provenance, never permission to
-launch or resume work. No collection/model/GPU job was launched for publication.
+The package includes the collection seams, recorder, teacher takeover and data
+tools. `source/` supplies the Native task/environment, OpenDM interfaces, teacher
+orchestration, IsaacLab and cuRobo source. Keep the checkout when deploying these
+dependencies; the Python wheel does not install the separate simulator stack.
 
-## Rights And Privacy
+| Component | Location |
+| --- | --- |
+| Source catalog, contiguous registration and locked campaign ledger | `robofate_pipeline/campaign/` |
+| Frozen DM, Native-first parent and complete baseline reader | `robofate_pipeline/baseline/` |
+| Baseline loop, causal prefix replay, teacher loop | `robofate_pipeline/collection.py` |
+| 25 Hz RGB/state/action recording and ordered publication | `robofate_pipeline/recording/` |
+| Teacher owner/dispatch/transition checks | `robofate_pipeline/recording/teacher.py`, `predict.py`, `takeover.py` |
+| Original source-bound restore/context/physics comparator | `robofate_pipeline/restoration/` |
+| Original camera budget and durable teacher journal | `robofate_pipeline/persistence/` |
+| Replay, camera, journal and takeover composition | `robofate_pipeline/continuation.py` |
+| Production Model, isolated worker and owned supervisor | `robofate_pipeline/teacher/` |
+| Native creation hooks, layout checks and diagnostics | `robofate_pipeline/native/` |
+| Reserved-source preparation and Native-child execution | `robofate_pipeline/execution.py` |
+| Foreground deadline, owned cleanup and inherited simulator lock | `robofate_pipeline/foreground.py` |
+| External environment, Conveyor pins and Vulkan source/build | `robofate_pipeline/native/deployment.py`, `vulkan_build.py`, `vulkan/` |
+| Independent three-condition readback and one-shot settlement | `robofate_pipeline/readback/` |
+| Native environment, task definitions and DM adapter | `source/native/` |
+| Teacher workspace/session implementation | `source/teacher/` |
+| Inventory and training export | `inventory_episodes.py`, `export_training.py` |
+| Archive validation and training reader | `dataset_reader.py` |
+| Clean-release audit and exact file hashes | `robofate_pipeline/privacy.py`, `SOURCE_INDEX.json` |
 
-This repository is public. Dataset visibility and access are managed separately.
-No new open-source or dataset
-redistribution license is granted. Retain embedded third-party license notices.
-Supply licensed simulator/assets/weights and separately authorized teacher
-credentials externally; none are included in this repository.
+## Collection Boundary
+
+The source pipeline is integrated end to end, with **offline acceptance only**.
+Historical machine-specific launch chains are not distributed. The original
+restore, persistence and readback implementations are included with external
+source/owner/path/rule bindings. The production teacher, owned supervisor and
+Native construction hooks are now included, with a reserved-source execution
+API. The foreground parent, external deployment environment, original Conveyor
+checks and Vulkan compatibility source are wired. The frozen-DM baseline,
+independent baseline readback, source reservation, positive/negative ledger
+transactions and finite foreground campaign entry are included. No historical
+run is needed to bootstrap a fresh campaign, and no bundled configuration grants
+permission to execute one. See [campaign setup](docs/CAMPAIGN.md).
+See [runtime components](docs/RUNTIME.md), [deployment](docs/DEPLOYMENT.md) and
+[restoration/readback](docs/RESTORATION.md).
+
+The reusable code does not relax these gates: unknown action outcomes latch
+failure; source admission and restored-t1 verification remain mandatory; provider
+stops are checked again before control; teacher feedback requires committed
+recording. Numerical/pixel agreement is not itself a restore qualification.
+
+CPU tests validate these code paths using explicitly synthetic peers. They do
+not establish real simulator readiness, collection yield, speed, restore quality
+or training performance.
+
+The source-bound continuation uses the original restore comparator and journal,
+not no-op restore or persistence callbacks. Synthetic readback never grants
+positive credits or publishes a production manifest. An interrupted readback
+requires explicit reconciliation, not automatic retry.
+
+## Training Data
+
+Export scope is the **original shared DM/teacher prefix and successful teacher
+suffix only**. The original DM boundary and the teacher's fresh t1 observation
+remain distinct. Supervision defaults to teacher actions; the prefix is context.
+See [format](FORMAT.md).
+
+```sh
+robofate inventory --plan /external/inventory-plan.json
+python tools/make_export_plan.py --help
+robofate export --plan /external/export-plan.json
+python dataset_reader.py /external/episode.tar.gz --sha256 EXPECTED_SHA256
+```
+
+External plans and generated recordings may contain private provenance. Keep
+them outside this code project and audit data exports separately.
+
+## Clean Distribution
+
+```sh
+robofate audit --repo .
+# Optional: private historical literals, never included in the project:
+robofate audit --repo . --denylist /external/private-denylist.json
+```
+
+The audit checks every path and file byte, including hidden files and upstream
+binary meshes, rejects archives, run payloads, links and generated files, and
+requires an exact SHA256 source index. Reports contain rule identifiers instead
+of matched private text. Pattern matching is not a universal privacy proof;
+release selection and the private historical-literal audit are complementary.
+
+Robot meshes and task recipes are upstream source resources, not episode
+recordings. Public URLs, copyright notices, generic loopback addresses and
+container-internal mount paths are retained where needed.
+
+## Rights
+
+No new license is granted for the assembled project. Preserve the original
+notices under `source/native/`, its third-party dependencies and
+`source/teacher/THIRD_PARTY_NOTICES.md`. cuRobo assets have separate terms.
+Simulator assets, weights, licensed binaries and credentials are supplied
+externally. The robot-mesh references in two cuRobo URDF files use relative paths
+instead of an upstream developer's absolute home directory.

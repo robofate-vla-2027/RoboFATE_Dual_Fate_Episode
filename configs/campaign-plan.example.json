@@ -1,0 +1,8 @@
+{
+  "schema": "robofate.campaign-plan.v1",
+  "data_kind": "actual",
+  "execution_policy_ref": null,
+  "restore_template_ref": null,
+  "readback_policy_ref": null,
+  "entries": []
+}

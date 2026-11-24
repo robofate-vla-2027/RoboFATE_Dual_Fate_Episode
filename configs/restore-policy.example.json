@@ -1,0 +1,13 @@
+{
+  "schema": "robofate.restore-policy.v1",
+  "data_kind": "actual",
+  "data_root": null,
+  "config_root": null,
+  "execution_owner": null,
+  "partition": null,
+  "task_totals": {},
+  "excluded_source_ids": [],
+  "admission_ref": null,
+  "rules": {"profile_template": null, "invariants": null},
+  "code_pins": {}
+}

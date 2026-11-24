@@ -1,0 +1,11 @@
+{
+  "schema": "robofate.campaign-config.v1",
+  "data_kind": "actual",
+  "campaign": null,
+  "execution_owner": null,
+  "ledger_root": null,
+  "config_root": null,
+  "source_commit": null,
+  "target_at": null,
+  "tasks": {}
+}

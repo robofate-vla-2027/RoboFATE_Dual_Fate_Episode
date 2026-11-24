@@ -1,0 +1,7 @@
+{
+  "schema": "robofate.source-catalog.v1",
+  "data_kind": "actual",
+  "campaign": null,
+  "execution_owner": null,
+  "tasks": {}
+}

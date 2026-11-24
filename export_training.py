@@ -8,6 +8,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import socket
 import struct
 import tarfile
@@ -114,12 +115,25 @@ class HashWriter:
 
 def export_episode(episode, output):
     key, t1 = episode["episode_key"], episode["t1_native"]
+    if not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", key):
+        raise ValueError("Unsafe episode key")
     final = output / (key + ".tar.gz")
     ready = output / (key + ".ready.json")
     if ready.exists():
         receipt = json.loads(ready.read_bytes())
         if not final.is_file() or final.stat().st_size != receipt["bytes"]:
             raise ValueError("Previously exported archive changed")
+        digest = hashlib.sha256()
+        with final.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(chunk)
+        if digest.hexdigest() != receipt["sha256"]:
+            raise ValueError("Previously exported archive checksum mismatch")
+        for field in ("episode_key", "source_id", "task", "source_manifest_sha256", "t1_native"):
+            if receipt[field] != episode[field]:
+                raise ValueError("Previously exported episode identity changed")
+        if hashlib.sha256(Path(episode["source_manifest"]).read_bytes()).hexdigest() != episode["source_manifest_sha256"]:
+            raise ValueError("Source manifest changed")
         return receipt
     if final.exists():
         raise ValueError("Archive exists without a completion receipt")
@@ -345,6 +359,13 @@ def export_episode(episode, output):
 def main(request):
     if socket.gethostname() != request["expected_hostname"]:
         raise RuntimeError("Hostname mismatch")
+    if not isinstance(request.get("episodes"), list) or not request["episodes"]:
+        raise ValueError("A nonempty episodes list is required")
+    keys = [episode["episode_key"] for episode in request["episodes"]]
+    if len(keys) != len(set(keys)) or any(
+            not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", key)
+            for key in keys):
+        raise ValueError("Episode keys must be unique safe names")
     output = Path(request["output"])
     output.mkdir(parents=True, exist_ok=True)
     for episode in request["episodes"]:

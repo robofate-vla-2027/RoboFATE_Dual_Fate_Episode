@@ -1,0 +1,9 @@
+{
+  "schema": "robofate.readback-policy.v1",
+  "data_kind": "actual",
+  "data_root": null,
+  "manifest_root": null,
+  "execution": {"host": null, "hostname": null, "owner_chat": null, "campaign": null},
+  "protocol_refs": {"outline": null, "directive": null},
+  "code_pins": {}
+}

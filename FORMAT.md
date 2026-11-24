@@ -60,12 +60,14 @@ splits should be made from preserved source/group identity, not frame randomizat
 ```
 
 The immutable inventory has `files` entries with `source`, `bytes`, `mtime_ns`.
-The historical `inventory_episodes.py` helper accepts injected `REQUEST_B64`
-for the original audited ledger plan. Its full-branch inventory is an audit
-input, not authorization to publish full branches.
+`inventory_episodes.py --plan` accepts an explicit inventory plan. Relocation
+requires explicit `physical_runs`; no historical machine path is inferred.
+Its full-branch inventory is an audit input, not authorization to publish full
+branches.
 
 The exporter checks source manifest hashes, inventory sizes/mtimes, PNG chunk
 CRCs/deflate scanlines, numeric state, action/control alignment, native success,
 held targets and contiguous indices. It does not launch or validate a trainer.
-An existing `.ready.json` receipt is reused only after the archive size check;
-run the reader with its expected SHA256 for independent complete revalidation.
+An existing `.ready.json` receipt is reused only after archive size, full SHA256
+and source identity checks; run the reader with its expected SHA256 for
+independent complete revalidation.
